@@ -194,7 +194,6 @@ int main(void)
 
 
 
-		  //HAL_Delay(10);
 	  //}
 
     /* USER CODE END WHILE */
@@ -535,10 +534,10 @@ void phase(int step, uint16_t speed){
 
 		outPWM(&htim1, CHANNEL_BH, 0);
 		outPWM(&htim1, CHANNEL_CH, 0);
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | CL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | CL_Pin, GPIO_PIN_RESET);
 
 		outPWM(&htim1, CHANNEL_AH, speed);
-		HAL_GPIO_WritePin(GPIOB, BL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, BL_Pin, GPIO_PIN_SET);
 
 		delta = bemfA - bemfSum;
 		strSize = sprintf((char*)buffer, "STEP: %d AH-BL\r\n", step);
@@ -548,11 +547,11 @@ void phase(int step, uint16_t speed){
 	case 2:
 		outPWM(&htim1, CHANNEL_BH, 0);
 		outPWM(&htim1, CHANNEL_CH, 0);
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | BL_Pin, GPIO_PIN_RESET);
 
 
 		outPWM(&htim1, CHANNEL_AH, speed);
-		HAL_GPIO_WritePin(GPIOB, CL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin, GPIO_PIN_SET);
 
 		delta = bemfC - bemfSum;
 		strSize = sprintf((char*)buffer, "STEP: %d AH-CL\r\n", step);
@@ -562,11 +561,11 @@ void phase(int step, uint16_t speed){
 	case 3:
 		outPWM(&htim1, CHANNEL_CH, 0);
 		outPWM(&htim1, CHANNEL_AH, 0);
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | BL_Pin, GPIO_PIN_RESET);
 
 
 		outPWM(&htim1, CHANNEL_BH, speed);
-		HAL_GPIO_WritePin(GPIOB, CL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin, GPIO_PIN_SET);
 
 		strSize = sprintf((char*)buffer, "STEP: %d BH-CL\r\n", step);
 		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
@@ -576,10 +575,10 @@ void phase(int step, uint16_t speed){
 	case 4:
 		outPWM(&htim1, CHANNEL_CH, 0);
 		outPWM(&htim1, CHANNEL_AH, 0);
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | BL_Pin, GPIO_PIN_RESET);
 
 		outPWM(&htim1, CHANNEL_BH, speed);
-		HAL_GPIO_WritePin(GPIOB, AL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin, GPIO_PIN_SET);
 
 		strSize = sprintf((char*)buffer, "STEP: %d BH-AL\r\n", step);
 		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
@@ -589,10 +588,10 @@ void phase(int step, uint16_t speed){
 	case 5:
 		outPWM(&htim1, CHANNEL_AH, 0);
 		outPWM(&htim1, CHANNEL_BH, 0);
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | BL_Pin, GPIO_PIN_RESET);
 
 		outPWM(&htim1, CHANNEL_CH, speed);
-		HAL_GPIO_WritePin(GPIOB, AL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin, GPIO_PIN_SET);
 
 		strSize = sprintf((char*)buffer, "STEP: %d CH-AL\r\n", step);
 		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
@@ -602,10 +601,10 @@ void phase(int step, uint16_t speed){
 	case 6:
 		outPWM(&htim1, CHANNEL_BH, 0);
 		outPWM(&htim1, CHANNEL_AH, 0);
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | AL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | AL_Pin, GPIO_PIN_RESET);
 
 		outPWM(&htim1, CHANNEL_CH, speed);
-		HAL_GPIO_WritePin(GPIOB, BL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, BL_Pin, GPIO_PIN_SET);
 
 		strSize = sprintf((char*)buffer, "STEP: %d CH-BL\r\n", step);
 		HAL_UART_Transmit(&huart1, buffer, strSize, 100);

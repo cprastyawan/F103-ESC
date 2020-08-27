@@ -1197,7 +1197,7 @@ void phase(int step, uint16_t speed){
  80007dc:	2108      	movs	r1, #8
  80007de:	4895      	ldr	r0, [pc, #596]	; (8000a34 <phase+0x2b4>)
  80007e0:	f7ff fcd4 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | CL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | CL_Pin, GPIO_PIN_RESET);
  80007e4:	2200      	movs	r2, #0
  80007e6:	21a0      	movs	r1, #160	; 0xa0
  80007e8:	4893      	ldr	r0, [pc, #588]	; (8000a38 <phase+0x2b8>)
@@ -1209,7 +1209,7 @@ void phase(int step, uint16_t speed){
  80007f2:	2100      	movs	r1, #0
  80007f4:	488f      	ldr	r0, [pc, #572]	; (8000a34 <phase+0x2b4>)
  80007f6:	f7ff fcc9 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, BL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, BL_Pin, GPIO_PIN_SET);
  80007fa:	2201      	movs	r2, #1
  80007fc:	2140      	movs	r1, #64	; 0x40
  80007fe:	488e      	ldr	r0, [pc, #568]	; (8000a38 <phase+0x2b8>)
@@ -1252,7 +1252,7 @@ void phase(int step, uint16_t speed){
  800083e:	2108      	movs	r1, #8
  8000840:	487c      	ldr	r0, [pc, #496]	; (8000a34 <phase+0x2b4>)
  8000842:	f7ff fca3 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | BL_Pin, GPIO_PIN_RESET);
  8000846:	2200      	movs	r2, #0
  8000848:	2160      	movs	r1, #96	; 0x60
  800084a:	487b      	ldr	r0, [pc, #492]	; (8000a38 <phase+0x2b8>)
@@ -1265,7 +1265,7 @@ void phase(int step, uint16_t speed){
  8000854:	2100      	movs	r1, #0
  8000856:	4877      	ldr	r0, [pc, #476]	; (8000a34 <phase+0x2b4>)
  8000858:	f7ff fc98 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, CL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin, GPIO_PIN_SET);
  800085c:	2201      	movs	r2, #1
  800085e:	2180      	movs	r1, #128	; 0x80
  8000860:	4875      	ldr	r0, [pc, #468]	; (8000a38 <phase+0x2b8>)
@@ -1308,7 +1308,7 @@ void phase(int step, uint16_t speed){
  80008a0:	2100      	movs	r1, #0
  80008a2:	4864      	ldr	r0, [pc, #400]	; (8000a34 <phase+0x2b4>)
  80008a4:	f7ff fc72 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, AL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin | BL_Pin, GPIO_PIN_RESET);
  80008a8:	2200      	movs	r2, #0
  80008aa:	2160      	movs	r1, #96	; 0x60
  80008ac:	4862      	ldr	r0, [pc, #392]	; (8000a38 <phase+0x2b8>)
@@ -1321,7 +1321,7 @@ void phase(int step, uint16_t speed){
  80008b6:	2104      	movs	r1, #4
  80008b8:	485e      	ldr	r0, [pc, #376]	; (8000a34 <phase+0x2b4>)
  80008ba:	f7ff fc67 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, CL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin, GPIO_PIN_SET);
  80008be:	2201      	movs	r2, #1
  80008c0:	2180      	movs	r1, #128	; 0x80
  80008c2:	485d      	ldr	r0, [pc, #372]	; (8000a38 <phase+0x2b8>)
@@ -1364,7 +1364,7 @@ void phase(int step, uint16_t speed){
  8000902:	2100      	movs	r1, #0
  8000904:	484b      	ldr	r0, [pc, #300]	; (8000a34 <phase+0x2b4>)
  8000906:	f7ff fc41 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | BL_Pin, GPIO_PIN_RESET);
  800090a:	2200      	movs	r2, #0
  800090c:	21c0      	movs	r1, #192	; 0xc0
  800090e:	484a      	ldr	r0, [pc, #296]	; (8000a38 <phase+0x2b8>)
@@ -1376,7 +1376,7 @@ void phase(int step, uint16_t speed){
  8000918:	2104      	movs	r1, #4
  800091a:	4846      	ldr	r0, [pc, #280]	; (8000a34 <phase+0x2b4>)
  800091c:	f7ff fc36 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, AL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin, GPIO_PIN_SET);
  8000920:	2201      	movs	r2, #1
  8000922:	2120      	movs	r1, #32
  8000924:	4844      	ldr	r0, [pc, #272]	; (8000a38 <phase+0x2b8>)
@@ -1419,7 +1419,7 @@ void phase(int step, uint16_t speed){
  8000964:	2104      	movs	r1, #4
  8000966:	4833      	ldr	r0, [pc, #204]	; (8000a34 <phase+0x2b4>)
  8000968:	f7ff fc10 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | BL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | BL_Pin, GPIO_PIN_RESET);
  800096c:	2200      	movs	r2, #0
  800096e:	21c0      	movs	r1, #192	; 0xc0
  8000970:	4831      	ldr	r0, [pc, #196]	; (8000a38 <phase+0x2b8>)
@@ -1431,7 +1431,7 @@ void phase(int step, uint16_t speed){
  800097a:	2108      	movs	r1, #8
  800097c:	482d      	ldr	r0, [pc, #180]	; (8000a34 <phase+0x2b4>)
  800097e:	f7ff fc05 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, AL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, AL_Pin, GPIO_PIN_SET);
  8000982:	2201      	movs	r2, #1
  8000984:	2120      	movs	r1, #32
  8000986:	482c      	ldr	r0, [pc, #176]	; (8000a38 <phase+0x2b8>)
@@ -1474,7 +1474,7 @@ void phase(int step, uint16_t speed){
  80009c6:	2100      	movs	r1, #0
  80009c8:	481a      	ldr	r0, [pc, #104]	; (8000a34 <phase+0x2b4>)
  80009ca:	f7ff fbdf 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, CL_Pin | AL_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, CL_Pin | AL_Pin, GPIO_PIN_RESET);
  80009ce:	2200      	movs	r2, #0
  80009d0:	21a0      	movs	r1, #160	; 0xa0
  80009d2:	4819      	ldr	r0, [pc, #100]	; (8000a38 <phase+0x2b8>)
@@ -1486,7 +1486,7 @@ void phase(int step, uint16_t speed){
  80009dc:	2108      	movs	r1, #8
  80009de:	4815      	ldr	r0, [pc, #84]	; (8000a34 <phase+0x2b4>)
  80009e0:	f7ff fbd4 	bl	800018c <outPWM>
-		HAL_GPIO_WritePin(GPIOB, BL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, BL_Pin, GPIO_PIN_SET);
  80009e4:	2201      	movs	r2, #1
  80009e6:	2140      	movs	r1, #64	; 0x40
  80009e8:	4813      	ldr	r0, [pc, #76]	; (8000a38 <phase+0x2b8>)
@@ -1529,7 +1529,7 @@ void phase(int step, uint16_t speed){
  8000a2c:	2000016c 	.word	0x2000016c
  8000a30:	aaaaaaab 	.word	0xaaaaaaab
  8000a34:	20000254 	.word	0x20000254
- 8000a38:	40010c00 	.word	0x40010c00
+ 8000a38:	40010800 	.word	0x40010800
  8000a3c:	20000170 	.word	0x20000170
  8000a40:	08004e0c 	.word	0x08004e0c
  8000a44:	20000098 	.word	0x20000098
