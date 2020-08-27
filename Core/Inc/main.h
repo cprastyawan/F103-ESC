@@ -52,6 +52,8 @@ typedef enum {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -62,18 +64,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOA
-#define AH_Pin GPIO_PIN_0
-#define AH_GPIO_Port GPIOB
-#define AL_Pin GPIO_PIN_1
-#define AL_GPIO_Port GPIOB
-#define BH_Pin GPIO_PIN_2
-#define BH_GPIO_Port GPIOB
-#define BL_Pin GPIO_PIN_10
-#define BL_GPIO_Port GPIOB
-#define CH_Pin GPIO_PIN_11
-#define CH_GPIO_Port GPIOB
-#define CL_Pin GPIO_PIN_12
-#define CL_GPIO_Port GPIOB
+#define AL_Pin GPIO_PIN_5
+#define AL_GPIO_Port GPIOA
+#define BL_Pin GPIO_PIN_6
+#define BL_GPIO_Port GPIOA
+#define CL_Pin GPIO_PIN_7
+#define CL_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
