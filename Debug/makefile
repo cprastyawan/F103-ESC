@@ -38,6 +38,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 F103-ESC.list \
 
+OBJCOPY_HEX += \
+F103-ESC.hex \
+
 OBJCOPY_BIN += \
 F103-ESC.bin \
 
@@ -61,6 +64,11 @@ F103-ESC.list: $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+F103-ESC.hex: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "F103-ESC.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 F103-ESC.bin: $(EXECUTABLES)
 	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "F103-ESC.bin"
 	@echo 'Finished building: $@'
@@ -71,7 +79,7 @@ clean:
 	-$(RM) *
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 .PHONY: all clean dependents
 .SECONDARY:
