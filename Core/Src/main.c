@@ -42,13 +42,13 @@
 #define CHANNEL_B TIM_CHANNEL_2
 #define CHANNEL_C TIM_CHANNEL_3
 
-#define ENABLE_A TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;
-#define ENABLE_B TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
-#define ENABLE_C TIM1->CCER |= TIM_CCER_CC3E | TIM_CCER_CC3NE;
+#define ENABLE_A TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE
+#define ENABLE_B TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE
+#define ENABLE_C TIM1->CCER |= TIM_CCER_CC3E | TIM_CCER_CC3NE
 
-#define DISABLE_A TIM1->CCER &= ~(TIM_CCER_CC1E | TIM_CCER_CC1NE);
-#define DISABLE_B TIM1->CCER &= ~(TIM_CCER_CC2E | TIM_CCER_CC2NE);
-#define DISABLE_C TIM1->CCER &= ~(TIM_CCER_CC3E | TIM_CCER_CC3NE);
+#define DISABLE_A TIM1->CCER &= ~(TIM_CCER_CC1E | TIM_CCER_CC1NE)
+#define DISABLE_B TIM1->CCER &= ~(TIM_CCER_CC2E | TIM_CCER_CC2NE)
+#define DISABLE_C TIM1->CCER &= ~(TIM_CCER_CC3E | TIM_CCER_CC3NE)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,6 +57,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 
@@ -64,7 +67,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 static uint32_t Input_DutyCycle;
-static uint32_t Frequency;
+static float Frequency;
+uint16_t adcVal[4];
 ESC_MODE esc_mode;
 
 uint32_t pwm_cal_min;
@@ -74,7 +78,6 @@ static unsigned char buffer[200];
 static int strSize;
 uint32_t bemfA = 0, bemfB = 0, bemfC = 0;
 
-volatile uint32_t adcValue[3];
 bool ADCDataStatus;
 
 int step = 1;
@@ -85,9 +88,11 @@ static uint32_t delta, lastDelta;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 void sound(uint32_t Frequency, uint32_t milliseconds);
 void phase(int step, uint16_t speed);
@@ -130,18 +135,25 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_ADCEx_Calibration_Start(&hadc1);
-  //HAL_ADC_Start(&hadc1);
-  //HAL_ADC_Start_DMA(&hadc1, adcValue, 3);
-  //HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+  HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, adcVal, 4);
+
   DWT_Init();
+
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1 | TIM_CHANNEL_2 | TIM_CHANNEL_3);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1 | TIM_CHANNEL_2 | TIM_CHANNEL_3);
+
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+
   //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
 
@@ -163,8 +175,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  //if(ADCDataStatus){
-		  //ADCDataStatus = false;
+	  if(ADCDataStatus){
+		  ADCDataStatus = false;
+	  }
 
 		 /* bemfA = adcValue[0];
 		  bemfB = adcValue[1];
@@ -187,7 +200,7 @@ int main(void)
 				  if(step > 6) step = 1;
 			  }
 		  }*/
-	  	  phase(step, 0xFFFF / 0xF);
+	  	  phase(step, 0x7FFF);
 		  step++;
 		  if(step > 6) step = 1;
 		  //HAL_Delay(100);
@@ -222,6 +235,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -250,6 +264,89 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 5;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_13CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -347,9 +444,11 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_SlaveConfigTypeDef sSlaveConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -360,6 +459,19 @@ static void MX_TIM2_Init(void)
   htim2.Init.Period = 65535;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
@@ -393,9 +505,18 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 1500;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
 
 }
 
@@ -433,6 +554,22 @@ static void MX_USART1_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -453,7 +590,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
 }
@@ -476,8 +613,8 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_A, speed);
 
 		delta = bemfA - bemfSum;
-		strSize = sprintf((char*)buffer, "STEP: %d AH-BL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//strSize = sprintf((char*)buffer, "STEP: %d AH-BL\r\n", step);
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		break;
 
 	case 2: //AH-CL
@@ -489,8 +626,8 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_A, speed);
 
 		delta = bemfC - bemfSum;
-		strSize = sprintf((char*)buffer, "STEP: %d AH-CL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//strSize = sprintf((char*)buffer, "STEP: %d AH-CL\r\n", step);
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		break;
 
 	case 3: //BH-CL
@@ -502,8 +639,8 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_B, speed);
 
 		strSize = sprintf((char*)buffer, "STEP: %d BH-CL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
-		delta = bemfB - bemfSum;
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//delta = bemfB - bemfSum;
 		break;
 
 	case 4: //BH-AL
@@ -514,8 +651,8 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_A, 0);
 		outPWM(&htim1, CHANNEL_B, speed);
 
-		strSize = sprintf((char*)buffer, "STEP: %d BH-AL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//strSize = sprintf((char*)buffer, "STEP: %d BH-AL\r\n", step);
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		delta = bemfA - bemfSum;
 		break;
 
@@ -527,8 +664,8 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_A, 0);
 		outPWM(&htim1, CHANNEL_C, speed);
 
-		strSize = sprintf((char*)buffer, "STEP: %d CH-AL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//strSize = sprintf((char*)buffer, "STEP: %d CH-AL\r\n", step);
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		delta = bemfC - bemfSum;
 		break;
 
@@ -540,17 +677,17 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_B, 0);
 		outPWM(&htim1, CHANNEL_C, speed);
 
-		strSize = sprintf((char*)buffer, "STEP: %d CH-BL\r\n", step);
-		HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+		//strSize = sprintf((char*)buffer, "STEP: %d CH-BL\r\n", step);
+		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		delta = bemfB - bemfSum;
 		break;
 	}
 	//HAL_Delay(100);
 }
 
-/*void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	if(!ADCDataStatus) ADCDataStatus = true;
-}*/
+}
 
 void sound(uint32_t Frequency, uint32_t milliseconds){
 /*	int x = 0;
@@ -583,7 +720,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
 	if(htim->Instance == TIM2){
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1){
-			Count_RisingEdge = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_1);
+			//Count_RisingEdge = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_1);
+			Count_RisingEdge = TIM2->CCR1;
 
 			if(Freq_State == 0){
 				Freq_State = 1;
@@ -592,19 +730,25 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 			else if(Freq_State == 1){
 				Freq_State = 0;
 				Count_Freq2 = Count_RisingEdge;
-				Frequency = 1 / ((Count_Freq2 - Count_Freq1) / 1000); //in kHz
-				Frequency = Frequency * 1000; //Convert to Hz
+				if(Count_Freq2 > Count_Freq1){
+					Frequency = (float)(1 / (((float)Count_Freq2 - (float)Count_Freq1) / 1000) * 1000); //in Hz;
+					//Frequency = Frequency * 1000; //Convert to Hz
+					strSize = sprintf((char*)buffer, "Freq: %f\r\n", Frequency);
+					HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+				}
 			}
 		}
 
 		else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2){
-			Count_FallingEdge = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_2);
+			Count_FallingEdge = TIM2->CCR2;
 		}
 
 		if(Count_FallingEdge > Count_RisingEdge){
 			Input_DutyCycle = Count_FallingEdge - Count_RisingEdge;
-			Count_RisingEdge = 0;
-			Count_FallingEdge = 0;
+			strSize = sprintf((char*)buffer, "Duty Cycle: %lu\r\n", Input_DutyCycle);
+			HAL_UART_Transmit(&huart1, buffer, strSize, 100);
+			//Count_RisingEdge = 0;
+			//Count_FallingEdge = 0;
 		}
 	}
 }

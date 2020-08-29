@@ -50,7 +50,7 @@ all: F103-ESC.elf secondary-outputs
 
 # Tool invocations
 F103-ESC.elf: $(OBJS) $(USER_OBJS) C:\Users\LENOVO\STM32CubeIDE\workspace_1.4.2\F103-ESC\STM32F103C8TX_FLASH.ld
-	arm-none-eabi-gcc -o "F103-ESC.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\LENOVO\STM32CubeIDE\workspace_1.4.2\F103-ESC\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F103-ESC.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "F103-ESC.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\LENOVO\STM32CubeIDE\workspace_1.4.2\F103-ESC\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F103-ESC.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
