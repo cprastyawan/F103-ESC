@@ -42,6 +42,12 @@
 #define CHANNEL_B TIM_CHANNEL_2
 #define CHANNEL_C TIM_CHANNEL_3
 
+#define ADC_CHANNEL_VA 0
+#define ADC_CHANNEL_VB 1
+#define ADC_CHANNEL_VC 2
+#define ADC_CHANNEL_VN 3
+#define ADC_CHANNEL_TEMP 4
+
 #define ENABLE_A TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE
 #define ENABLE_B TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE
 #define ENABLE_C TIM1->CCER |= TIM_CCER_CC3E | TIM_CCER_CC3NE
@@ -68,7 +74,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 static uint32_t Input_DutyCycle;
 static float Frequency;
-uint16_t adcVal[4];
+uint32_t adcVal[5];
 ESC_MODE esc_mode;
 
 uint32_t pwm_cal_min;
@@ -100,6 +106,8 @@ void outPWM(TIM_HandleTypeDef *htim, uint32_t channel, uint16_t dutyCycle){
 	dutyCycle = map(dutyCycle, 0, 0xFFFF, 0, 2000);
 	__HAL_TIM_SET_COMPARE(htim, channel, dutyCycle);
 }
+
+bool ZeroCross(int step);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -142,7 +150,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADCEx_Calibration_Start(&hadc1);
-  HAL_ADC_Start_DMA(&hadc1, adcVal, 4);
+  HAL_ADC_Start_DMA(&hadc1, adcVal, 5);
 
   DWT_Init();
 
@@ -175,9 +183,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(ADCDataStatus){
-		  ADCDataStatus = false;
-	  }
+	 // if(ADCDataStatus){
+		//  ADCDataStatus = false;
+	  //}
 
 		 /* bemfA = adcValue[0];
 		  bemfB = adcValue[1];
@@ -200,9 +208,10 @@ int main(void)
 				  if(step > 6) step = 1;
 			  }
 		  }*/
-	  	  phase(step, 0x7FFF);
-		  step++;
-		  if(step > 6) step = 1;
+	  	  phase(step, 0xBFFF);
+	  	  step = step + (ZeroCross(step) ? 1 : 0);
+		  step = step > 6 ? 1 : step;
+		  //step++;
 		  //HAL_Delay(100);
 
 		 /* strSize = sprintf((char*)buffer, "BEMF-A: %lu\r\n", bemfA);
@@ -265,7 +274,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -306,7 +315,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_13CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -598,7 +607,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void phase(int step, uint16_t speed){
-	uint32_t bemfSum = (bemfA + bemfB + bemfC) / 3;
+	//uint32_t bemfSum = (bemfA + bemfB + bemfC) / 3;
 
 	//strSize = sprintf((char*)buffer, "bemfA: %lu, bemfB: %lu, bemfC: %lu, bemfSum: %lu\t",bemfA, bemfB, bemfC, bemfSum);
 	//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
@@ -612,7 +621,7 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_B, 0);
 		outPWM(&htim1, CHANNEL_A, speed);
 
-		delta = bemfA - bemfSum;
+		//delta = bemfA - bemfSum;
 		//strSize = sprintf((char*)buffer, "STEP: %d AH-BL\r\n", step);
 		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		break;
@@ -625,7 +634,7 @@ void phase(int step, uint16_t speed){
 		outPWM(&htim1, CHANNEL_C, 0);
 		outPWM(&htim1, CHANNEL_A, speed);
 
-		delta = bemfC - bemfSum;
+		//delta = bemfC - bemfSum;
 		//strSize = sprintf((char*)buffer, "STEP: %d AH-CL\r\n", step);
 		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
 		break;
@@ -653,7 +662,7 @@ void phase(int step, uint16_t speed){
 
 		//strSize = sprintf((char*)buffer, "STEP: %d BH-AL\r\n", step);
 		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
-		delta = bemfA - bemfSum;
+		//delta = bemfA - bemfSum;
 		break;
 
 	case 5: //CH-AL
@@ -666,7 +675,7 @@ void phase(int step, uint16_t speed){
 
 		//strSize = sprintf((char*)buffer, "STEP: %d CH-AL\r\n", step);
 		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
-		delta = bemfC - bemfSum;
+		//delta = bemfC - bemfSum;
 		break;
 
 	case 6: //CH-BL
@@ -679,14 +688,43 @@ void phase(int step, uint16_t speed){
 
 		//strSize = sprintf((char*)buffer, "STEP: %d CH-BL\r\n", step);
 		//HAL_UART_Transmit(&huart1, buffer, strSize, 100);
-		delta = bemfB - bemfSum;
+		//delta = bemfB - bemfSum;
 		break;
 	}
 	//HAL_Delay(100);
 }
 
+bool ZeroCross(int step){
+	switch(step){
+	case 1:
+		return (adcVal[ADC_CHANNEL_VC] < adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE C FALLING
+		break;
+
+	case 2:
+		return (adcVal[ADC_CHANNEL_VB] > adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE B RISING
+		break;
+
+	case 3:
+		return (adcVal[ADC_CHANNEL_VA] < adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE A FALLING
+		break;
+
+	case 4:
+		return (adcVal[ADC_CHANNEL_VC] > adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE C RISING
+		break;
+
+	case 5:
+		return (adcVal[ADC_CHANNEL_VB] < adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE B FALLING
+		break;
+
+	case 6:
+		return (adcVal[ADC_CHANNEL_VA] > adcVal[ADC_CHANNEL_VN] ? true : false); //PHASE A RISING
+		break;
+	}
+	return false;
+}
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	if(!ADCDataStatus) ADCDataStatus = true;
+	//if(!ADCDataStatus) ADCDataStatus = true;
 }
 
 void sound(uint32_t Frequency, uint32_t milliseconds){
